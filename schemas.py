@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List
 
+
 class User(BaseModel):
     id: int
     name: str
@@ -37,7 +38,7 @@ class PostCreate(BaseModel):
 class PostUpdate(BaseModel):
     title: str
     content: str
-    user_id: int 
+    user_id: int
 
 
 class PostList(BaseModel):
