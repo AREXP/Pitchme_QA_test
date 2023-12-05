@@ -1,8 +1,9 @@
 import uuid
-import pytest
 
-from helpers import validate_response_data
-from schemas import User
+import pytest
+from helpers import validate_data_against_model
+
+from schemas import User, UserCreate
 
 
 class TestGetUsers:
@@ -13,7 +14,7 @@ class TestGetUsers:
         """Test that user can be retrieved by id"""
         users_api = mock_users_api  # TODO: Remove after API is implemented
         user = users_api.get_user(user_id=user_id, expected_status_code=200)
-        validate_response_data(
+        validate_data_against_model(
             response_data=user, expected_model=User, expected_response_data_type="dict"
         )
         assert (
@@ -40,7 +41,7 @@ class TestGetUsers:
         users_api = mock_users_api  # TODO: Remove after API is implemented
         users = users_api.get_users(expected_status_code=200)
         for user in users:
-            validate_response_data(
+            validate_data_against_model(
                 response_data=user,
                 expected_model=User,
                 expected_response_data_type="dict",
@@ -52,3 +53,52 @@ class TestGetUsers:
             assert user[
                 "email"
             ], f"Expected non-empty user email, but got '{user['email']}'"
+
+
+class TestCreateUser:
+    """Tests on creating users"""
+
+    def test_create_user(self, mock_users_api):
+        """Test that user can be created"""
+        users_api = mock_users_api  # TODO: Remove after API is implemented
+        postfix = uuid.uuid4().int
+        user_name = f"user_{postfix}"
+        user_email = f"user_{postfix}@example.com"
+        created_user = users_api.create_user(
+            user_data={"name": user_name, "email": user_email},
+            expected_status_code=201,
+        )
+        validate_data_against_model(
+            response_data=created_user,
+            expected_model=User,
+            expected_response_data_type="dict",
+        )
+        assert created_user[
+            "id"
+        ], f"Expected non-empty user id, but got '{created_user['id']}'"
+        assert (
+            created_user["name"] == user_name
+        ), f"Expected user name = '{user_name}', but got '{created_user['name']}'"
+        assert (
+            created_user["email"] == user_email
+        ), f"Expected user email = '{user_email}', but got '{created_user['email']}'"
+
+    def test_failed_to_create_user_without_name(self, mock_users_api):
+        """Test that user cannot be created without name"""
+        users_api = mock_users_api  # TODO: Remove after API is implemented
+        result = users_api.create_user(
+            user_data={"email": "john@example.com"}, expected_status_code=400,
+        )
+        assert result == {
+            "error": "User not created"
+        }, f"Expected '{'error': 'User not created'}', but got '{result}'"
+
+    def test_failed_to_create_user_without_email(self, mock_users_api):
+        """Test that user cannot be created without email"""
+        users_api = mock_users_api  # TODO: Remove after API is implemented
+        result = users_api.create_user(
+            user_data={"name": "John Doe"}, expected_status_code=400,
+        )
+        assert result == {
+            "error": "User not created"
+        }, f"Expected '{'error': 'User not created'}', but got '{result}'"

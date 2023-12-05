@@ -20,7 +20,24 @@ class SocialMediaAPI:
         if expected_status_code:
             assert (
                 response.status_code == expected_status_code
-            ), f"Expected status code ='{expected_status_code}', but request to '{self.base_url + endpoint}' returned '{response.status_code}', response body: \n'{response.text}'"
+            ), f"Expected status code ='{expected_status_code}', but request to '{url}' returned '{response.status_code}', response body: \n'{response.text}'"
+
+        result_json = response.json()
+        return result_json
+
+    def post(
+        self, endpoint: str, data: dict, expected_status_code: Optional[int] = None
+    ) -> Union[dict, list]:
+        if not endpoint.startswith("/"):
+            endpoint = "/" + endpoint
+        url = self.base_url + endpoint
+
+        response = requests.post(url=url, headers=self.default_headers, json=data)
+
+        if expected_status_code:
+            assert (
+                response.status_code == expected_status_code
+            ), f"Expected status code ='{expected_status_code}', but request to '{url}' returned '{response.status_code}', response body: \n'{response.text}'"
 
         result_json = response.json()
         return result_json
@@ -28,7 +45,7 @@ class SocialMediaAPI:
 
 class Users(SocialMediaAPI):
 
-    GET_USERS = "/users"
+    USERS = "/users"
     GET_USER_BY_ID = "/user/{user_id}"
 
     def __init__(self, social_media_api: SocialMediaAPI):
@@ -43,4 +60,11 @@ class Users(SocialMediaAPI):
         )
 
     def get_users(self, expected_status_code: Optional[int] = None) -> list[dict]:
-        return self.get(self.GET_USERS, expected_status_code=expected_status_code)
+        return self.get(self.USERS, expected_status_code=expected_status_code)
+
+    def create_user(
+        self, user_data: dict, expected_status_code: Optional[int] = None
+    ) -> dict:
+        return self.post(
+            self.USERS, data=user_data, expected_status_code=expected_status_code
+        )

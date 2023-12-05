@@ -2,7 +2,9 @@ from typing import Optional
 
 import pytest
 
+from schemas import UserCreate
 from tests.base import SocialMediaAPI, Users
+from tests.helpers import validate_data_against_model
 
 
 def pytest_addoption(parser):
@@ -53,7 +55,25 @@ def mock_users_api(monkeypatch, social_media_api):
             for user_id in range(1, 11)
         ]
 
+    def mock_create_user(
+        self, user_data: dict, expected_status_code: Optional[int] = None
+    ) -> dict:
+        try:
+            validate_data_against_model(
+                response_data=user_data,
+                expected_model=UserCreate,
+                expected_response_data_type="dict",
+            )
+            return {
+                "id": 11,
+                "name": user_data["name"],
+                "email": user_data["email"],
+            }
+        except:
+            return {"error": "User not created"}
+
     monkeypatch.setattr(Users, "get_user", mock_get_user)
     monkeypatch.setattr(Users, "get_users", mock_get_users)
+    monkeypatch.setattr(Users, "create_user", mock_create_user)
 
     return Users(social_media_api)

@@ -1,10 +1,10 @@
-from pydantic import BaseModel
-from pydantic import ValidationError
-import pytest
 from typing import Type, Union
 
+import pytest
+from pydantic import BaseModel, ValidationError
 
-def validate_response_data(
+
+def validate_data_against_model(
     *,
     expected_model: Type[BaseModel],
     response_data: Union[dict, list, str],
@@ -17,6 +17,7 @@ def validate_response_data(
     :param response_data: The response dict to validate.
     :param expected_response_data_type: The type of response data. Can be 'dict', 'list' or 'str'.
     :raises ValidationError: If response data does not conform to given model.
+    :return: True if validation passes.
     """
     if expected_response_data_type == "dict":
         assert isinstance(
@@ -34,3 +35,5 @@ def validate_response_data(
         expected_model.model_validate(response_data)
     except ValidationError as e:
         pytest.fail(f"API response validation failed with error: {e}")
+
+    return True
