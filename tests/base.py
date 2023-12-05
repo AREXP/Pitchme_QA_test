@@ -13,10 +13,9 @@ class SocialMediaAPI:
     ) -> Union[dict, list]:
         if not endpoint.startswith("/"):
             endpoint = "/" + endpoint
+        url = self.base_url + endpoint
 
-        response = requests.get(
-            url=self.base_url + endpoint, headers=self.default_headers
-        )
+        response = requests.get(url=url, headers=self.default_headers)
 
         if expected_status_code:
             assert (
