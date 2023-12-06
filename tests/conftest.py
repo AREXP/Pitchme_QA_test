@@ -9,6 +9,7 @@ from tests.base import (
     Posts,
     TEST_ID_FOR_DELETE_OR_UPDATE,
     TEST_ID_NON_EXISTING,
+    MAX_NAME_LENGTH,
 )
 from tests.helpers import validate_data_against_model
 
@@ -70,6 +71,11 @@ def mock_users_api(monkeypatch, social_media_api):
                 expected_model=UserCreate,
                 expected_response_data_type="dict",
             )
+            if (
+                user_data["email"] in ("invalid_email_format", "copycat@example.com")
+                or len(user_data["name"]) > MAX_NAME_LENGTH
+            ):
+                return {"error": "User not created"}
             return {
                 "id": 11,
                 "name": user_data["name"],
@@ -156,6 +162,8 @@ def mock_posts_api(monkeypatch, social_media_api):
                 expected_model=PostCreate,
                 expected_response_data_type="dict",
             )
+            if post_data["user_id"] not in range(1, 11):
+                return {"error": "Post not created"}
             return {
                 "id": 11,
                 "title": post_data["title"],

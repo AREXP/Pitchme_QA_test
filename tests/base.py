@@ -4,6 +4,7 @@ import requests
 
 TEST_ID_FOR_DELETE_OR_UPDATE = "1" * 32  # to use in tests to avoid changing real data
 TEST_ID_NON_EXISTING = "2" * 32  # to use in tests to avoid changing real data
+MAX_NAME_LENGTH = 50
 
 
 class SocialMediaAPI:

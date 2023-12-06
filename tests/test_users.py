@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from helpers import validate_data_against_model
-from base import TEST_ID_FOR_DELETE_OR_UPDATE, TEST_ID_NON_EXISTING
+from base import TEST_ID_FOR_DELETE_OR_UPDATE, TEST_ID_NON_EXISTING, MAX_NAME_LENGTH
 
 from schemas import User
 
@@ -116,6 +116,85 @@ class TestCreateUser:
         assert result == {
             "error": "User not created"
         }, f"Expected '{'error': 'User not created'}', but got '{result}'"
+
+    # Positive regression scenarios with expected success
+    positive_user_test_data = [
+        pytest.param(f"JohnDoe", f"john.doe@example.com", 201, id="Regular User"),
+        pytest.param(
+            "a" * MAX_NAME_LENGTH, f"long.name@example.com", 201, id="Max Length Name"
+        ),
+        pytest.param(
+            "Jane.Doe-O'Riley",
+            f"jane.doe.o'riley@example.com",
+            201,
+            id="Special Characters In Name",
+        ),
+        pytest.param(
+            "Tim", f"tim@subdomain.example.com", 201, id="Email With Subdomains"
+        ),
+        pytest.param("Eve", f"eve@example.co.uk", 201, id="Email Different TLD"),
+    ]
+
+    @pytest.mark.users
+    @pytest.mark.regression
+    @pytest.mark.parametrize(
+        "user_name, user_email, expected_status", positive_user_test_data
+    )
+    def test_create_user_positive(
+        self, mock_users_api, user_name, user_email, expected_status
+    ):
+        user_data = {"name": user_name, "email": user_email}
+        created_user = mock_users_api.create_user(
+            user_data=user_data, expected_status_code=expected_status
+        )
+
+        # Validate the response against the user schema.
+        validate_data_against_model(
+            response_data=created_user,
+            expected_model=User,
+            expected_response_data_type="dict",
+        )
+
+        assert (
+            created_user["name"] == user_name
+        ), f"Expected user name to be '{user_name}'"
+        assert (
+            created_user["email"] == user_email
+        ), f"Expected user email to be '{user_email}'"
+
+    # Negative regression scenarios with expected failures
+    negative_user_test_data = [
+        pytest.param("JohnDoe", f"copycat@example.com", 400, id="Email Already Taken"),
+        pytest.param(None, f"no.name@example.com", 400, id="Empty Name"),
+        pytest.param(
+            "Jane Doe", f"invalid_email_format", 400, id="Invalid Email Format"
+        ),
+        pytest.param(
+            "a" * (MAX_NAME_LENGTH + 1),
+            f"too.long.name@example.com",
+            400,
+            id="Name Too Long",
+        ),
+        pytest.param("JohnNoEmail", None, 400, id="Missing Email"),
+    ]
+
+    @pytest.mark.users
+    @pytest.mark.negative
+    @pytest.mark.regression
+    @pytest.mark.parametrize(
+        "user_name, user_email, expected_status", negative_user_test_data
+    )
+    def test_create_user_negative(
+        self, mock_users_api, user_name, user_email, expected_status
+    ):
+        user_data = {"name": user_name, "email": user_email}
+
+        user = mock_users_api.create_user(
+            user_data=user_data, expected_status_code=expected_status
+        )
+        assert user == {
+            "error": "User not created"
+        }, f"Expected '{'error': 'User not created'}', but got '{user}'"
 
 
 @pytest.mark.users
