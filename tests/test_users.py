@@ -102,3 +102,44 @@ class TestCreateUser:
         assert result == {
             "error": "User not created"
         }, f"Expected '{'error': 'User not created'}', but got '{result}'"
+
+
+class TestUpdateUser:
+    """Tests on updating users"""
+
+    def test_update_existing_user(self, mock_users_api):
+        user_id = 1
+        updated_data = {"name": "Updated Name", "email": "updated@example.com"}
+        result = mock_users_api.update_user(
+            user_id=user_id, user_data=updated_data, expected_status_code=200
+        )
+        assert result["id"] == user_id
+        assert result["name"] == updated_data["name"]
+        assert result["email"] == updated_data["email"]
+
+    def test_update_non_existing_user(self, mock_users_api):
+        user_id = 999  # Non-existing user ID for mock
+        updated_data = {"name": "Nonexistent Name", "email": "nonexistent@example.com"}
+        result = mock_users_api.update_user(
+            user_id=user_id, user_data=updated_data, expected_status_code=404
+        )
+        assert result == {"error": "User not found"}
+
+
+class TestDeleteUser:
+    """Tests on deleting users"""
+
+    def test_delete_existing_user(self, mock_users_api):
+        user_id = 1
+        # check that user exists before deleting
+        user = mock_users_api.get_user(user_id=user_id, expected_status_code=200)
+        # delete user
+        result = mock_users_api.delete_user(user_id=user_id, expected_status_code=200)
+        assert result == {"message": "User deleted"}
+        # check that user does not exist after deleting
+        # result = mock_users_api.get_user(user_id=user_id, expected_status_code=200)  # TODO: Uncomment after API is implemented
+
+    def test_delete_non_existing_user(self, mock_users_api):
+        user_id = 999  # Non-existing user ID for mock
+        result = mock_users_api.delete_user(user_id=user_id, expected_status_code=404)
+        assert result == {"error": "User not found"}
