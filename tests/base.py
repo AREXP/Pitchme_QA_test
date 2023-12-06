@@ -2,6 +2,9 @@ from typing import Optional, Union
 
 import requests
 
+TEST_ID_FOR_DELETE_OR_UPDATE = "1" * 32  # to use in tests to avoid changing real data
+TEST_ID_NON_EXISTING = "2" * 32  # to use in tests to avoid changing real data
+
 
 class SocialMediaAPI:
     def __init__(self, base_url: str):

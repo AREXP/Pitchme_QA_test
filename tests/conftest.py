@@ -3,7 +3,13 @@ from typing import Optional
 import pytest
 
 from schemas import UserCreate, UserUpdate, PostUpdate, PostCreate
-from tests.base import SocialMediaAPI, Users, Posts
+from tests.base import (
+    SocialMediaAPI,
+    Users,
+    Posts,
+    TEST_ID_FOR_DELETE_OR_UPDATE,
+    TEST_ID_NON_EXISTING,
+)
 from tests.helpers import validate_data_against_model
 
 
@@ -75,7 +81,7 @@ def mock_users_api(monkeypatch, social_media_api):
     def mock_update_user(
         self, user_id: int, user_data: dict, expected_status_code: Optional[int] = None
     ) -> dict:
-        if user_id in range(1, 11):
+        if user_id in range(1, 11) or user_id == TEST_ID_FOR_DELETE_OR_UPDATE:
             validate_data_against_model(
                 response_data=user_data,
                 expected_model=UserUpdate,
@@ -86,14 +92,18 @@ def mock_users_api(monkeypatch, social_media_api):
                 "name": user_data["name"],
                 "email": user_data["email"],
             }
+        elif user_id == TEST_ID_NON_EXISTING:
+            return {"error": "User not found"}
         else:
             return {"error": "User not found"}
 
     def mock_delete_user(
         self, user_id: int, expected_status_code: Optional[int] = None
     ) -> dict:
-        if user_id in range(1, 11):
+        if user_id in range(1, 11) or user_id == TEST_ID_FOR_DELETE_OR_UPDATE:
             return {"message": "User deleted"}
+        elif user_id == TEST_ID_NON_EXISTING:
+            return {"error": "User not found"}
         else:
             return {"error": "User not found"}
 
@@ -158,7 +168,7 @@ def mock_posts_api(monkeypatch, social_media_api):
     def mock_update_post(
         self, post_id: int, post_data: dict, expected_status_code: Optional[int] = None
     ) -> dict:
-        if post_id in range(1, 11):
+        if post_id in range(1, 11) or post_id == TEST_ID_FOR_DELETE_OR_UPDATE:
             validate_data_against_model(
                 response_data=post_data,
                 expected_model=PostUpdate,
@@ -170,14 +180,18 @@ def mock_posts_api(monkeypatch, social_media_api):
                 "content": post_data["content"],
                 "user_id": post_data["user_id"],
             }
+        elif post_id == TEST_ID_NON_EXISTING:
+            return {"error": "Post not found"}
         else:
             return {"error": "Post not found"}
 
     def mock_delete_post(
         self, post_id: int, expected_status_code: Optional[int] = None
     ) -> dict:
-        if post_id in range(1, 11):
+        if post_id in range(1, 11) or post_id == TEST_ID_FOR_DELETE_OR_UPDATE:
             return {"message": "Post deleted"}
+        elif post_id == TEST_ID_NON_EXISTING:
+            return {"error": "Post not found"}
         else:
             return {"error": "Post not found"}
 
